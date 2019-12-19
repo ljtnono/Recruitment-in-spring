@@ -240,21 +240,69 @@
 
 * 标记清除
 
+![image-20191217212302471](assets/image-20191217212302471.png)
 
+标记清除算法是通过可达性分析算法发现那些该清除的对象，然后进行标记，标记之后再清除，标记清除实际上就是对需要清除的内存起始位置和结束位置做一个标记就行，不需要做过多额外的操作，**所以标记清除算法的优点是速度很快，但是缺点是残留了很多碎片空间**
 
-### 分代垃圾回收
+* 标记整理
+
+![image-20191217213129170](assets/image-20191217213129170.png)
+
+![image-20191217213150183](assets/image-20191217213150183.png)
+
+标记整理算法也是通过可达性分析算法标记需要清除的空间之后，再进行处理，与标记清除算法不一样，标记整理算法为了不产生内存碎片，会在清除空间之后，将可用空间移动形成连续的空间，也就是整理。**标记整理算法的优点就是不会产生内存碎片，缺点就是整理会牵扯到对象的内存地址的移动，所以效率比较低。**
+
+* 复制算法
+
+![image-20191217214208543](assets/image-20191217214208543.png)
+
+复制算法首先将内存划分为相同大小的两块区域（From，To）然后也是标记出来需要清除的内存，然后将存活的对象从From区域复制到To区域
+
+![image-20191217214342358](assets/image-20191217214342358.png)
+
+然后清空From区域的内存
+
+![image-20191217214406207](assets/image-20191217214406207.png)
+
+最后交换From和To的指针，保证To区域总是空闲的
+
+![image-20191217214435348](assets/image-20191217214435348.png)
+
+**复制算法的优点是不会产生内存碎片，缺点是复制算法会占用双倍的内存空间**
+
+### **分代垃圾回收**机制
+
+分代垃圾回收机制是现在大部分虚拟机采用的垃圾回收机制，分代垃圾回收机制将内存分为新生代和老年代，新生代分为伊甸园和幸存区From幸存区To
+
+![image-20191217214855249](assets/image-20191217214855249.png)
+
+这样分配的原因：Java中需要长时间存活的对象可以分配在老年代，老年代的垃圾回收发生的频率较低，而新生代的垃圾回收发生的频率较高，所以适合一些不需要长时间存活的对象，这样Java虚拟机可以在不同的区域执行不同的垃圾回收算法。
 
 * 对象首先分配在伊甸园区域
 
-* 新生代空间不足时，触发minor gc，伊甸园和from存活的对象使用copy复制到to中，存活的对象年龄加1并且交换from to
+![image-20191217220310080](assets/image-20191217220310080.png)
 
+* 新生代空间不足时，触发minor gc，伊甸园和from存活的对象使用copy复制到to中，存活的对象年龄加1并且交换from to（复制算法）
+
+![image-20191217220520869](assets/image-20191217220520869.png)
+
+![image-20191217220644757](assets/image-20191217220644757.png)
+
+当一个对象年龄到15岁，那么会被晋升到老年代（从幸存区到老年代）
+
+![image-20191217220804230](assets/image-20191217220804230.png)
+
+当老年代和新生代的对象都很多的时候，会触发Full GC，一次FullGC会携带一次或多次MiniorGC，这样就有足够的空间了
+
+![image-20191217220910942](assets/image-20191217220910942.png)
+
+总结：
+
+* 对象首先分配在伊甸园区域
+* 新生代空间不足时，触发minior gc, 伊甸园和from存活的对象使用copy复制到to中，存活的对象年龄加1并且交换from to
 * minor gc会引发stop the world，暂停其他用户的线程，等垃圾回收结束，用户线程才恢复运行
-
-* 当对象寿命超过阙值时，会晋升至老年代，最大寿命是15（4bit）
-
+* 当对象寿命超过阈值时，会晋升至老年代，最大寿命是15（4bit）
 * 当老年代空间不足，会先尝试触发minor gc,如果之后空间仍不足，那么触发full gc，STW的时间更长
-
-  
 
 ### 相关VM参数
 
@@ -265,16 +313,156 @@
 | 新生代大小         | -Xmn 或 (-XX:NewSize=size + -XX:MaxNewSize=size)             |
 | 幸存区比例（动态） | -XX:InitialSurvivorRatio=ratio 和 -XX:+UseAdaptiveSizePolicy |
 | 幸存区比例         | -XX:SurvivorRatio=ratio                                      |
-| 晋升阙值           | -XX:MaxTenuringThreshold=threshold                           |
+| 晋升阈值           | -XX:MaxTenuringThreshold=threshold                           |
 | 晋升详情           | -XX:+PrintTenuringDistribution                               |
 | GC详情             | -XX:+PrintGCDetails -verbose:gc                              |
 | FullGC前MinorGC    | -XX:+ScavengeBeforeFullGC                                    |
 
+### 案例：查看垃圾回收
 
+```java
+package cn.ljtnono.demo;
 
-案例：查看垃圾回收
+/**
+ * 演示垃圾分代回收
+ */
+public class GabygeDemo {
+    private static final int _512KB = 512 * 1024;
+    private static final int _1MB = 1024 * 1024;
+    private static final int _6MB = 6 * 1024 * 1024;
+    private static final int _7MB = 7 * 1024 * 1024;
+    private static final int _8MB = 8 * 1024 * 1024;
 
+    // -Xms20M -Xmx20M -Xmn10M -XX:+UseSerialGC -XX:+PrintGCDetails -verbose:gc
+    public static void main(String[] args) {
+		// 没有任何代码
+    }
+}
+//GC
+Heap
+ def new generation   total 9216K, used 2319K [0x00000000fec00000, 0x00000000ff600000, 0x00000000ff600000)
+  eden space 8192K,  28% used [0x00000000fec00000, 0x00000000fee43e78, 0x00000000ff400000)
+  from space 1024K,   0% used [0x00000000ff400000, 0x00000000ff400000, 0x00000000ff500000)
+  to   space 1024K,   0% used [0x00000000ff500000, 0x00000000ff500000, 0x00000000ff600000)
+ tenured generation   total 10240K, used 0K [0x00000000ff600000, 0x0000000100000000, 0x0000000100000000)
+   the space 10240K,   0% used [0x00000000ff600000, 0x00000000ff600000, 0x00000000ff600200, 0x0000000100000000)
+ Metaspace       used 3496K, capacity 4498K, committed 4864K, reserved 1056768K
+  class space    used 387K, capacity 390K, committed 512K, reserved 1048576K
 
+```
+
+```java
+package cn.ljtnono.demo;
+
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * 演示垃圾分代回收
+ */
+public class GabygeDemo {
+    private static final int _512KB = 512 * 1024;
+    private static final int _1MB = 1024 * 1024;
+    private static final int _6MB = 6 * 1024 * 1024;
+    private static final int _7MB = 7 * 1024 * 1024;
+    private static final int _8MB = 8 * 1024 * 1024;
+
+    // -Xms20M -Xmx20M -Xmn10M -XX:+UseSerialGC -XX:+PrintGCDetails -verbose:gc
+    public static void main(String[] args) {
+        List<byte[]> list = new ArrayList<>();
+        list.add(new byte[_7MB]);
+        // 当分配了7M内存时，首先发现伊甸园区的内存快满了，于是触发了一次MiniorGC，将伊甸园区域的空间回收到to空间，然后交换from和to，所以可以看到from空间占了63%，to空间是空的
+    }
+}
+// GC
+[GC (Allocation Failure) [DefNew: 2155K->653K(9216K), 0.0018399 secs] 2155K->653K(19456K), 0.0018907 secs] [Times: user=0.00 sys=0.00, real=0.00 secs] 
+Heap
+ def new generation   total 9216K, used 8067K [0x00000000fec00000, 0x00000000ff600000, 0x00000000ff600000)
+  eden space 8192K,  90% used [0x00000000fec00000, 0x00000000ff33d8c0, 0x00000000ff400000)
+  from space 1024K,  63% used [0x00000000ff500000, 0x00000000ff5a3658, 0x00000000ff600000)
+  to   space 1024K,   0% used [0x00000000ff400000, 0x00000000ff400000, 0x00000000ff500000)
+ tenured generation   total 10240K, used 0K [0x00000000ff600000, 0x0000000100000000, 0x0000000100000000)
+   the space 10240K,   0% used [0x00000000ff600000, 0x00000000ff600000, 0x00000000ff600200, 0x0000000100000000)
+ Metaspace       used 3497K, capacity 4498K, committed 4864K, reserved 1056768K
+  class space    used 387K, capacity 390K, committed 512K, reserved 1048576K
+```
+
+```java
+package cn.ljtnono.demo;
+
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * 演示垃圾分代回收
+ */
+public class GabygeDemo {
+    private static final int _512KB = 512 * 1024;
+    private static final int _1MB = 1024 * 1024;
+    private static final int _6MB = 6 * 1024 * 1024;
+    private static final int _7MB = 7 * 1024 * 1024;
+    private static final int _8MB = 8 * 1024 * 1024;
+
+    // -Xms20M -Xmx20M -Xmn10M -XX:+UseSerialGC -XX:+PrintGCDetails -verbose:gc
+    public static void main(String[] args) {
+        List<byte[]> list = new ArrayList<>();
+        list.add(new byte[_7MB]);
+        // 再次放入两个512KB，发现触发了第二次GC，将伊甸园的内存从90%释放到to，from和to交换之后，发现新生代已经容纳不下这些对象，于是将对象放入了老年代
+        list.add(new byte[_512KB]);
+        list.add(new byte[_512KB]);
+    }
+}
+//GC 
+[GC (Allocation Failure) [DefNew: 2155K->653K(9216K), 0.0015297 secs] 2155K->653K(19456K), 0.0015752 secs] [Times: user=0.00 sys=0.00, real=0.00 secs] 
+[GC (Allocation Failure) [DefNew: 8497K->512K(9216K), 0.0058702 secs] 8497K->8329K(19456K), 0.0059026 secs] [Times: user=0.00 sys=0.00, real=0.01 secs] 
+Heap
+ def new generation   total 9216K, used 1106K [0x00000000fec00000, 0x00000000ff600000, 0x00000000ff600000)
+  eden space 8192K,   7% used [0x00000000fec00000, 0x00000000fec94930, 0x00000000ff400000)
+  from space 1024K,  50% used [0x00000000ff400000, 0x00000000ff480048, 0x00000000ff500000)
+  to   space 1024K,   0% used [0x00000000ff500000, 0x00000000ff500000, 0x00000000ff600000)
+ tenured generation   total 10240K, used 7817K [0x00000000ff600000, 0x0000000100000000, 0x0000000100000000)
+   the space 10240K,  76% used [0x00000000ff600000, 0x00000000ffda26e0, 0x00000000ffda2800, 0x0000000100000000)
+ Metaspace       used 3497K, capacity 4498K, committed 4864K, reserved 1056768K
+  class space    used 387K, capacity 390K, committed 512K, reserved 1048576K
+```
+
+### 大对象直接晋升到老年代
+
+```java
+package cn.ljtnono.demo;
+
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * 演示垃圾分代回收
+ */
+public class GabygeDemo {
+    private static final int _512KB = 512 * 1024;
+    private static final int _1MB = 1024 * 1024;
+    private static final int _6MB = 6 * 1024 * 1024;
+    private static final int _7MB = 7 * 1024 * 1024;
+    private static final int _8MB = 8 * 1024 * 1024;
+
+    // -Xms20M -Xmx20M -Xmn10M -XX:+UseSerialGC -XX:+PrintGCDetails -verbose:gc
+    public static void main(String[] args) {
+        List<byte[]> list = new ArrayList<>();
+        list.add(new byte[_8MB]);
+        // 这里直接分配8MB的内存空间，由于新生代放不下了，直接晋升到老年代，并且不会触发垃圾回收
+        // 如果这里再放入一个8MB内存，就会出现内存溢出，当然Java虚拟机会使用GC进行自救，自救不成功就会出现OutOfMemory中
+    }
+}
+//GC
+Heap
+ def new generation   total 9216K, used 2319K [0x00000000fec00000, 0x00000000ff600000, 0x00000000ff600000)
+  eden space 8192K,  28% used [0x00000000fec00000, 0x00000000fee43e78, 0x00000000ff400000)
+  from space 1024K,   0% used [0x00000000ff400000, 0x00000000ff400000, 0x00000000ff500000)
+  to   space 1024K,   0% used [0x00000000ff500000, 0x00000000ff500000, 0x00000000ff600000)
+ tenured generation   total 10240K, used 8192K [0x00000000ff600000, 0x0000000100000000, 0x0000000100000000)
+   the space 10240K,  80% used [0x00000000ff600000, 0x00000000ffe00010, 0x00000000ffe00200, 0x0000000100000000)
+ Metaspace       used 3497K, capacity 4498K, committed 4864K, reserved 1056768K
+  class space    used 387K, capacity 390K, committed 512K, reserved 1048576K
+```
 
 ## 垃圾回收器
 
@@ -298,7 +486,9 @@
 
 #### 串行垃圾回收器
 
--XX:+UseSerialGC = Serial + SerialOld
+开启串行回收器的GC参数 -XX:+UseSerialGC = Serial + SerialOld
+
+其中Serial工作在新生代，采用复制算法，SerialOld工作在老年代，采用标记整理算法
 
 ![image-20191208214226465](assets/image-20191208214226465.png)
 
@@ -306,7 +496,7 @@
 
 #### 吞吐量优先垃圾回收器(JDK1.8默认垃圾回收器)
 
--XX:+UseParallelGC ~ -XX:+UseParallelOldGC
+使用该垃圾回收器GC参数 -XX:+UseParallelGC（新生代，复制） ~ -XX:+UseParallelOldGC（老年代，标记整理）
 
 -XX:+UseAdaptiveSizePolicy   // 采用一个自适应的大小调整策略，主要是指调整新生代的大小，这个打开会动态的调整伊甸园和幸存区域的大小
 
@@ -318,11 +508,11 @@
 
 ![image-20191208215043379](assets/image-20191208215043379.png)
 
-可以看到，与串行垃圾回收器相比，吞吐量优先垃圾回收器有多个垃圾回收线程共同执行垃圾回收任务，线程的数量默认是CPU数量，也可以通过-XX:ParallelGCThreads=n这个虚拟机参数来设置线程数量
+可以看到，与串行垃圾回收器相比，吞吐量优先垃圾回收器有多个垃圾回收线程共同执行垃圾回收任务，线程的数量默认是跟你CPU核数相关，也可以通过-XX:ParallelGCThreads=n这个虚拟机参数来设置线程数量，这里当要进行GC的时候，所有的用户线程会到达一个安全点，之后垃圾回收线程会进行
 
-#### 相应时间优先垃圾回收器
+#### 响应时间优先垃圾回收器（CMS）
 
--XX:+UseConcMarkSweepGC ~ -XX:+UseParNewGC ~ SerialOld
+使用响应时间优先垃圾回收器GC参数：-XX:+UseConcMarkSweepGC ~ -XX:+UseParNewGC ~ SerialOld
 
 -XX:ParallelGCThreads=n ~ -XX:ConcGCThreads=threads
 
@@ -361,6 +551,8 @@
 
 ![image-20191208234847661](assets/image-20191208234847661.png)
 
+从上图可以看出，G1首先会进行新生代垃圾回收，然后进行新生代收集和并发标记，最后新生代老年代混合收集，然后循环这个过程
+
 ##### Young Collection（新生代内存布局）
 
 * 会STW（stop the world）
@@ -397,8 +589,6 @@
 -XX:MaxGCPauseMillis=ms
 
 ![image-20191209202859256](assets/image-20191209202859256.png)
-
-
 
 ##### Full GC
 
@@ -486,4 +676,10 @@ JDK 9 更高效的回收
 * 250+ 增加
 * 180+bug修复
 * [https://docs.oracle.com/en/java/javase/12/gctuning](https://docs.oracle.com/en/java/javase/12/gctuning)
+
+
+
+
+
+# G1 垃圾回收器还得找其他资料学习
 
