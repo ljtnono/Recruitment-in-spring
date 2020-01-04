@@ -16,12 +16,6 @@
 	  可以用Eclipse 的mat工具来分析GCRoot对象
 	
 
-案例：使用mat查看GCRoot对象
-
-```java
-
-```
-
 #### 四种引用
 
 * 强引用
