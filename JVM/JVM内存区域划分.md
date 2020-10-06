@@ -333,7 +333,7 @@ public class StringTableDemo {
         String s6 = s4.intern();
         System.out.println(s3 == s4); // false s3 是串池中的对象， s4是一个新的对象（堆的其他位置）
         System.out.println(s3 == s5); // true 这里s3 已经在串池中存在ab字符串对象，所以s5进行常量字符串拼接的时候，直接在串池中找，所以这两个对象是相等的
-        Systen.out.println(s4 == s6);
+        System.out.println(s4 == s6);
     }
 }
 // 以上代码的常量池
