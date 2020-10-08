@@ -1,2 +1,3 @@
-# Recruitment-in-spring
-春季招聘学习
+# study_note
+本人学习笔记，包含各种语言，中间件，数据库的基础使用和进阶相关笔记
+

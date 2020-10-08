@@ -15,6 +15,8 @@
 
 #### 下载烧录软件
 
+
+
 推荐使用官方推荐的Raspberry Pi Imager软件来进行镜像烧录，下载地址：[https://www.raspberrypi.org/downloads/](https://www.raspberrypi.org/downloads/)，当然也可以使用其他的烧录软件进行烧录。
 
 ### 烧录
