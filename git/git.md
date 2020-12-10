@@ -12,3 +12,4 @@
 [build]: 构造工具的或者外部依赖的改动，例如webpack，npm
 [revert]: 执行git revert打印的message
 ```
+
