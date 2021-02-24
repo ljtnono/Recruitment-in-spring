@@ -1,4 +1,4 @@
-### git 提交规范
+## git 提交规范
 
 ```txt
 注意：提交注释请按以下格式
@@ -11,5 +11,259 @@
 [sql]: 只改动了sql脚本相关的内容
 [build]: 构造工具的或者外部依赖的改动，例如webpack，npm
 [revert]: 执行git revert打印的message
+```
+
+## git常用60个命令
+
+### 配置操作
+
+#### 全局配置
+
+```bash
+git config --global user.name '你的名字'
+git config --global user.email '你的邮箱'
+```
+
+#### 当前仓库配置
+
+```bash
+git config --local user.name '你的名字'
+git config --local user.email '你的邮箱'
+```
+
+#### 查看全局配置
+
+```bash
+git config --global --list
+```
+
+#### 查看当前仓库配置
+
+```bash
+git config --local --list
+```
+
+#### 删除全局设置
+
+```bash
+git config --global --unset 要删除的配置项
+```
+
+#### 删除当前仓库配置
+
+```bash
+git config --local --unset 要删除的配置项
+```
+
+### 本地操作
+
+#### 查看变更情况
+
+```bash
+git status
+```
+
+#### 将当前目录及其子目录下所有变更都加入到暂存区
+
+```bash
+git add .
+```
+
+#### 将仓库内所有变更都加入到暂存区
+
+```bash
+git add -A
+```
+
+#### 将指定文件添加到暂存区
+
+```bash
+git add 文件1 文件2 文件3
+```
+
+#### 比较工作区和暂存区的所有差异
+
+```bash
+git diff
+```
+
+#### 比较某文件工作区和暂存区的差异
+
+```bash
+git diff 文件
+```
+
+#### 比较某文件暂存区和HEAD的差异
+
+```bash
+git diff --cached 文件
+```
+
+#### 比较某文件工作区和HEAD的差异
+
+```bash
+git diff --HEAD 文件
+```
+
+#### 创建commit
+
+```bash
+git commit
+```
+
+#### 将工作区指定文件恢复成和暂存区一致
+
+```bash
+git checkout 文件1 文件2 文件3
+```
+
+#### 将暂存区指定文件恢复成和HEAD一致
+
+```bash
+git reset 文件1 文件2 文件3
+```
+
+#### 将暂存区和工作区所有文件恢复成和HEAD一样
+
+```bash
+git reset --hard
+```
+
+#### 用户difftool比较任意两个commit的差异
+
+```bash
+git difftool 提交1 提交2
+```
+
+#### 查看哪些文件没被git管控
+
+```bash
+git ls-files --others
+```
+
+#### 将未处理完的变更先保存到stash中
+
+```bash
+git stash
+```
+
+#### 临时任务处理完后继续之前的工作
+
+```bash
+git stash pop ## 不保留stash
+git stash apply ## 保留stash
+```
+
+#### 查看所有stash
+
+```bash
+git stash list
+```
+
+#### 取回某次stash的变更
+
+```bash
+git stash pop stash@{数字n}
+```
+
+#### 优雅修改最后一次commit
+
+```bash
+git add .
+git commit --amend
+```
+
+### 分支操作
+
+#### 查看当前工作分支及本地分支
+
+```bash
+git branch -v
+```
+
+#### 查看本地和远端分支
+
+```bash
+git branch -av
+```
+
+#### 查看远端分支
+
+```bash
+git branch -rv
+```
+
+#### 切换到指定分支
+
+```bash
+git checkout 指定分支
+```
+
+#### 基于当前分支创建新分支
+
+```bash
+git checkout -b 新分支
+## 或者
+git branch 新分支
+```
+
+#### 基于指定分支创建新分支
+
+```bash
+git branch 新分支 指定分支
+```
+
+#### 基于某个commit创建分支
+
+```bash
+git branch 新分支 某个commit的id
+```
+
+#### 创建并切换到该分支
+
+```bash
+git checkout -b 新分支
+```
+
+#### 安全删除本地某分支
+
+```bash
+git branch -d 要删除的分支
+```
+
+#### 强行删除本地某个分支
+
+```bash
+git branch -D 要删除的分支
+```
+
+#### 删除已合并到master分支的所有本地分支
+
+```bash
+git branch --merged master | grep -v '^\*\| master' | xargs -n 1 git branch -d 
+```
+
+#### 删除远端origin 已不存在的所有本地分支
+
+```bash
+git remote prune origin
+```
+
+#### 将A分支合并到当前分支且为merge创建commit
+
+```bash
+git merge A分支
+```
+
+#### 将A分支合并到B分支且为merge创建commit
+
+```bash
+git merge A分支 B分支
+```
+
+#### 将当前分支基于B分支做rebase，以便将B分支合并到当前分支
+
+```bash
+git rebase B分支
 ```
 
