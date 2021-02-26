@@ -267,3 +267,141 @@ git merge A分支 B分支
 git rebase B分支
 ```
 
+#### 将A分支基于B分支做rebase，以便将B分支合入到A分支
+
+```shell
+git rebase B分支 A分支
+```
+
+### 变更历史
+
+#### 当前分支各个commit用一行显示
+
+```shell
+git log --oneline
+```
+
+#### 显示就近的n个commit
+
+```shell
+git log -n
+```
+
+#### 用图示显示所有分支的历史
+
+```shell
+git log --oneline --graph --all
+```
+
+#### 查看涉及到某文件变更的所有commit
+
+```shell
+git log 文件
+```
+
+#### 某文件各行最后修改对应的commit以及作者
+
+```shell
+git blame 文件
+```
+
+### 标签操作
+
+#### 查看已有标签
+
+```shell
+git tag
+```
+
+#### 新建标签
+
+```shell
+git tag v1.0
+```
+
+#### 新建带备注标签
+
+```shell
+git tag -a v1.0 -m "备注文字"
+```
+
+#### 给指定的commit打标签
+
+```shell
+git tag v1.0 commitid
+```
+
+#### 推送一个本地标签
+
+```shell
+git push origin v1.0
+```
+
+#### 推送全部未推送过的本地标签
+
+```shell
+git push origin --tags
+```
+
+#### 删除一个本地标签
+
+```shell
+git tag -d v1.0
+```
+
+#### 删除一个远端标签
+
+```shell
+git push origin :refs/tags/v1.0
+```
+
+### 远端交互
+
+#### 查看所有远端仓库
+
+```shell
+git remote -v
+```
+
+#### 添加远端仓库
+
+```shell
+git remote add url
+```
+
+#### 删除远端仓库
+
+```shell
+git remote remove remote名称
+```
+
+#### 重命名远端仓库
+
+```shell
+git remote rename 旧名称 新名称
+```
+
+#### 将远端所有分支和标签的变更都拉到本地
+
+```shell
+git fetch remote
+```
+
+#### 把远端分支的变更拉到本地，且merge到本地分支
+
+```shell
+git pull origin 分支名
+```
+
+#### 将本地分支push到远端
+
+```shell
+git push origin 分支名
+```
+
+#### 删除远端分支
+
+```shell
+git push remote --delete 远端分支名
+git push remote :远端分支名
+```
