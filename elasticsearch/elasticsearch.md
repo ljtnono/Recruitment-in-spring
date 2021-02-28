@@ -1,9 +1,3 @@
-## Elasticsearch的docker使用
-
-
-
-
-
 ## Elasticsearch的核心概念
 
 ### 索引（index）
@@ -46,9 +40,45 @@ Elasticsearch是一个接近实时的搜索平台。这意味着，从索引一�
 
 
 
-## Elasticsearch 客户端操作
 
 
+## elasticsearch安装及启动异常解决方式
+
+elasticsearch.yml配置文件
+
+```yaml
+bootstrap.memory_lock: false
+bootstrap.system_call_filter: false
+cluster.initial_master_nodes: ["node-1"]
+# 数据存储路径
+path.data: /xxx/xx/data
+path.logs: /xxx/xx/logs
+network.host: 0.0.0.0
+http.port: 9200
+http.cors.enabled: true
+http.cors.allow-origin: "*"
+```
+
+* **max virtual memory areas vm.max_map_count [65530] is too low, increase to at least [262144]**
+
+  ```shell
+  # 临时修改
+  sysctl -w vm.max_map_count=262144
+  # 永久修改
+  echo "vm.max_map_count=262144" >> /etc/sysctl.conf
+  sysctl -p /etc/sysctl.conf
+  ```
+
+* **max file descriptors [4096] for elasticsearch process is too low, increase to at least [65535]**
+
+  ```shell
+  vim /etc/security/limits.conf
+  # 添加以下内容 其中elastic是启动elasticsearch的用户名
+  elastic hard nofile 65536
+  elastic soft nofile 65536
+  ```
+
+## 
 
 
 
