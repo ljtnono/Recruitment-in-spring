@@ -53,3 +53,13 @@ COPY ["src", "dst"]
 当构建一个被继承的Dockerfile时运行命令，父镜像在被继承之后父镜像的onbuild会被触发，相当于是一个钩子程序
 
 ![image-20200217160938610](assets/image-20200217160938610.png)
+
+
+
+
+
+
+
+## Docker相关知识
+
+centos7容器中systemd 
