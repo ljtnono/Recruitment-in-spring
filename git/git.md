@@ -13,6 +13,47 @@
 [revert]: 执行git revert打印的message
 ```
 
+## git平时常用命令
+
+### Git global setup
+
+```bash
+git config --global user.name "lingjiatong"
+git config --global user.email "935188400@qq.com"
+```
+
+### Create a new repository
+
+```bash
+git clone git@192.168.172.218:ljtnono/ossbasedocker.git
+cd ossbasedocker
+touch README.md
+git add README.md
+git commit -m "add README"
+git push -u origin master
+```
+
+### Push an existing folder
+
+```bash
+cd existing_folder
+git init
+git remote add origin git@192.168.172.218:ljtnono/ossbasedocker.git
+git add .
+git commit -m "Initial commit"
+git push -u origin master
+```
+
+### Push an existing Git repository
+
+```bash
+cd existing_repo
+git remote rename origin old-origin
+git remote add origin git@192.168.172.218:ljtnono/ossbasedocker.git
+git push -u origin --all
+git push -u origin --tags
+```
+
 ## git常用60个命令
 
 ### 配置操作
