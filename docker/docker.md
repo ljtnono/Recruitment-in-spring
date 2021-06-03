@@ -64,3 +64,14 @@ COPY ["src", "dst"]
 
 ### docker镜像的导入（export和）
 
+
+
+
+
+
+
+#### **容器空间大小限制**
+
+在docker使用devicemapper作为存储驱动时，默认每个容器和镜像的最大大小为10G。如果需要调整，可以在daemon启动参数中，使用dm.basesize来指定，但需要注意的是，修改这个值，不仅仅需要重启docker daemon服务，还会导致宿主机上的所有本地镜像和容器都被清理掉。
+
+使用aufs或者overlay等其他存储驱动时，没有这个限制。

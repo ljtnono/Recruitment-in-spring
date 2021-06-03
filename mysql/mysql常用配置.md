@@ -23,7 +23,7 @@ touch logs/slow_sql.log
 touch logs/mysql.log
 chown -R mysql:mysql .
 # --datadir为mysql安装目录下的data文件夹
-bin/mysqld --initialize --user=mysql --datadir=<datadir>
+bin/mysqld --initialize --user=mysql --datadir=<basedir>/data
 bin/mysql_ssl_rsa_setup
 # 修改启动脚本中的basedir为mysql安装目录，datadir为mysql安装目录下的data目录
 # vim support-files/mysql.server
@@ -42,11 +42,10 @@ bin/mysql -uroot -p'<password>' --socket=<basedir>/mysql.sock
 
 ```mysql
 ALTER USER 'root'@'localhost' IDENTIFIED BY '<你的密码>'
+USE mysql;
 UPDATE user SET Host = '%' WHERE User = 'root';
 FLUSH PRIVILEGES;
 ```
-
-
 
 
 
@@ -68,7 +67,7 @@ secure_file_priv = <baseDir>
 # pid 设置
 pid-file = <baseDir>/mysql.pid
 [mysqld_safe]
-log-error=<baseDir>/mysql.log
+log-error=<baseDir>/logs/mysql.log
 ```
 
 
