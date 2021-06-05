@@ -83,5 +83,312 @@ Tips:
 ### 4.5 删除存储过程
 
 ```mysql
+DROP PROCEDURE [IF EXISTS] procedure_name;
 ```
+
+### 4.6 语法
+
+存储过程是可以编程的，意味着可以使用变量，表达式，控制结构，来完成比较复杂的功能
+
+#### 4.6.1 变量
+
+* DECLARE
+
+通过DECLARE可以定义一个局部变量，该变量的作用范围只能在BEGIN...END块中
+
+```mysql
+DECLARE var_name[,...] type [DEFAULT value]
+```
+
+例如：
+
+```mysql
+delimiter $
+create procedure pro_test2()
+begin
+	declare num int default 5;
+	select num+10;
+end $
+delimiter ;
+```
+
+* SET
+
+直接复制使用SET，可以赋值常量或者表达式，具体语法如下：
+
+```mysql
+SET var_name = expr [, var_name = expr] ...
+```
+
+示例：
+
+```mysql
+DELIMITER $
+
+CREATE PROCEDURE pro_test3()
+BEGIN
+	DECLARE NAME VARCHAR(20);
+	SET NAME = 'MYSQL';
+	SELECT NAME;
+END $
+
+DELIMITER ;
+```
+
+也可以通过SELECT ... INTO 方式进行赋值操作：
+
+```mysql
+DELIMITER $
+
+CREATE PROCEDURE pro_test5() 
+begin 
+  DECLARE count_num int; 
+  SELECT COUNT(*) INTO count_num FROM city; 
+  SELECT count_num; 
+END$
+
+DELIMITER ;
+```
+
+#### 4.6.2 if条件判断
+
+语法结构：
+
+```mysql
+if search_condition then statement_list
+
+	[elseif search_condition then statement_list] ...
+	
+	[else statement_list]
+	
+end if;
+```
+
+需求：
+
+```mysql
+-- 根据定义的身高变量，判定当前升高的所属的身材类型
+-- 180及以上 --------------》身材高挑
+-- 170-180 --------------》标准身材
+-- 170一下 --------------》一般身材
+```
+
+示例：
+
+```mysql
+DELIMITER $
+
+CREATE PROCEDURE pro_test6()
+BEGIN
+
+DECLARE height int DEFAULT 181;
+IF height >= 180 THEN
+	SELECT '身材高挑';
+ELSEIF height >= 170 THEN
+	SELECT '标准身材';
+ELSE 
+	SELECT '一般身材';
+END IF;
+-- ENDIF 后面的分号不能掉
+END $
+
+DELIMITER ;
+```
+
+#### 4.6.3 传递参数
+
+语法格式：
+
+```mysql
+CREATE PROCEDURE procedure_name([in/out/inout] 参数名 参数类型)
+...
+
+IN:			该参数可以作为输入，也就是需要调用方传入值，默认
+OUT:		该参数作为输出，也就是该参数可以作为返回值
+INOUT: 	既可以作为输入参数，也可以作为输出参数
+```
+
+**IN - 输入**
+
+需求：
+
+根据定义的身高变量，判定当前身高的所属的身材类型
+
+示例：
+
+```mysql
+DELIMITER $
+
+CREATE PROCEDURE pro_test5(in height int)
+BEGIN
+	DECLARE description varchar(50) default '';
+	if height >= 180 then
+		SET descirption = '身材高挑';
+	elseif height >= 170 then
+		SET descritpion = '标准身材';
+	else
+		SET description = '一般身材';
+	end if;
+	SELECT CONCAT('身高', height, '对应的身材类型为：', description);
+END $
+
+DELIMITER ;
+```
+
+**OUT - 输出**
+
+需求：
+
+根据传入的身高变量，获取当前身高的所属的身材类型
+
+示例：
+
+```mysql
+CREATE PROCEDURE pro_test5(in height int, out description varchar(100))
+BEGIN
+if height >= 180 THEN
+	SET description='身材高挑';
+elseif height >= 170 THEN
+	SET description='标准身材';
+else
+	SET description='一般身材';
+end if;
+end$
+```
+
+调用：
+
+```mysql
+call pro_test5(168, @description)$
+select @description$
+```
+
+Tips:
+
+@description：这种变量要在变量名称前面加上“@”符号，叫做用户会话变量，代表整个会话过程他都是具有作用的，整个类似于全局变量一样。
+
+@@global.sort_buffer_size：这种在变量前加上“@@”符号，叫做系统变量
+
+#### 4.6.4 case结构
+
+语法结构：
+
+```mysql
+-- 方式一：
+CASE case_value
+	WHEN when_value THEN statement_list
+	[WHEN when_value THEN statement_list] ...
+	[ELSE statement_list]
+END CASE;
+
+-- 方式二：
+CASE
+	WHEN search_condition THEN statement_list
+	[WHEN search_condition THEN statement_list] ...
+	[ELSE statement_list]
+END CASE;
+```
+
+需求：
+
+给定一个月份，然后计算出所在的季度
+
+示例：
+
+```mysql
+DELIMITER $
+
+CREATE PROCEDURE pro_test9(in month int)
+BEGIN
+	DECLARE result varchar(20);
+	CASE
+		WHEN month >= 1 and month <= 3 THEN
+			SET result = '第一季度';
+		WHEN month >= 4 and month <= 6 THEN
+			SET result = '第二季度';
+		WHEN month >= 7 and month <= 9 THEN
+			SET result = '第三季度';
+		WHEN month >= 10 and month <= 12 THEN
+			SET result = '第四季度';
+	END CASE;
+	SELECT CONCAT('您输入的月份为:', month, '该月份：', result) AS content;
+END $
+
+DELIMITER ;
+```
+
+#### 4.6.5 while循环
+
+语法结构：
+
+```mysql
+DELIMITER $
+
+CREATE PROCEDURE pro_test8(in n int)
+BEGIN
+	DECLARE total int default 0;
+	DECLARE num int default 1;
+	WHILE num <= n DO
+		SET total = total = num;
+		SET num = num + 1;
+	END WHILE;
+	SELECT total;
+END $
+
+DELIMITER $
+```
+
+#### 4.6.6 repeat结构
+
+有条件的循环控制语句，当满足条件的时候退出循环。while是满足条件才执行，repeat是满足条件就退出循环。
+
+语法结构：
+
+```mysql
+REPEAT
+	statement_list
+	UNTIL search_condition
+END REPEAT;
+```
+
+需求：
+
+计算从1加到n的值
+
+示例：
+
+```mysql
+DELIMITER $
+
+CREATE PROCEDURE pro_test10(in n int)
+BEGIN
+	DECLARE total int default 0;
+	REPEAT
+		SET total = total + n;
+		SET n = n - 1;
+		UNTIL n = 0
+	END REPEAT;
+	SELECT total;
+END $
+
+DELIMITER ;
+```
+
+#### 4.6.7 loop语句
+
+LOOP实现简单的循环，退出循环的条件需要使用其他语句定义，通常可以使用LEAVE语句实现，具体语法如下：
+
+```mysql
+[begin_label:] LOOP
+	statement_list
+END LOOP [end_label]
+```
+
+如果不再statement_list中增加退出循环的语句，那么LOOP语句可以用来实现简单的死循环。
+
+
+
+
+
+
 
