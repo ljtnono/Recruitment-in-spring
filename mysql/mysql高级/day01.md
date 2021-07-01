@@ -386,9 +386,151 @@ END LOOP [end_label]
 
 如果不再statement_list中增加退出循环的语句，那么LOOP语句可以用来实现简单的死循环。
 
+#### 4.6.8 leave语句
+
+用来从标注的流程构造中退出，通常和BEGIN...END或者循环一起使用。下面是一个使用LOOP和LEAVE的简单例子，退出循环：
+
+```mysql
+DELIMITER $
+
+CREATE PROCEDURE pro_test11(in n int)
+BEGIN
+	DECLARE total int default 0;
+	ins: LOOP
+	
+		IF n <= 0 THEN
+			LEAVE ins;
+		END IF;
+		
+		SET total = total + n;
+		SET n = n - 1;
+	END LOOP ins;
+END $
+
+DELIMITER ;
+```
+
+#### 4.6.9 游标/光标
+
+游标是用来存储查询结果集的数据类型，在存储过程和函数中可以使用光标对结果集进行循环的处理。光标的使用
+包括光标的声明、OPEN、FETCH和CLOSE，其语法分别如下。
+
+声明光标：
+
+```mysql
+DECLARE cursor_name CURSOR FOR select_statement;
+```
+
+OPEN光标：
+
+```mysql
+OPEN cursor_name;
+```
+
+FETCH光标：
+
+```mysql
+FETCH cursor_name INTO var_name [, var_name] ...
+```
+
+CLOSE光标：
+
+```mysql
+CLOSE cursor_name;
+```
+
+示例：
+
+初始化脚本：
+
+```mysql
+CREATE TABLE emp(
+	id int(11) NOT NULL AUTO_INCREMENT,
+  name varchar(50) NOT NULL COMMENT '姓名',
+  age int(11) COMMENT '年龄',
+  salary int(11) COMMENT '薪水',
+  primary key('id')
+) ENGINE=innodb DEFAULT CHARSET=utf8;
+
+INSERT INTO emp(id, name, age, salary) VALUES(null,'金毛狮王',55,3800),(null,'白眉鹰
+王',60,4000),(null,'青翼蝠王',38,2800),(null,'紫衫龙王',42,1800);
+```
+
+
+
+```mysql
+-- 查询emp表中数据，并逐行获取进行展示
+DELIMITER $
+
+CREATE procedure pro_test11()
+BEGIN
+	DECLARE e_id int(11);
+	DECLARE e_name varchar(50);
+	DECLARE e_age int(11);
+	DECLARE e_salary int(11);
+	DECLARE emp_result cursor for SELECT * FROM emp;
+	
+	OPEN emp_result;
+	FETCH emp_result INTO e_id, e_name, e_age, e_salary;
+	SELECT CONCAT('id=', e_id, ', name=', e_name, ', age=', e_age, ', 薪资为：', e_salary);
+	FETCH emp_result INTO e_id, e_name, e_age, e_salary;
+	SELECT CONCAT('id=', e_id, ', name=', e_name, ', age=', e_age, ', 薪资为：', e_salary);
+	FETCH emp_result INTO e_id, e_name, e_age, e_salary;
+	SELECT CONCAT('id=', e_id, ', name=', e_name, ', age=', e_age, ', 薪资为：', e_salary);
+	FETCH emp_result INTO e_id, e_name, e_age, e_salary;
+	SELECT CONCAT('id=', e_id, ', name=', e_name, ', age=', e_age, ', 薪资为：', e_salary);
+	FETCH emp_result INTO e_id, e_name, e_age, e_salary;
+	SELECT CONCAT('id=', e_id, ', name=', e_name, ', age=', e_age, ', 薪资为：', e_salary);
+	
+	CLOSE emp_result;
+END $
+
+DELIMITER ;
+```
+
+通过循环结构，获取游标中的数据
+
+```mysql
+```
 
 
 
 
 
+### 4.7 存储函数
+
+语法结构：
+
+```mysql
+CREATE FUNCTION function_name([param type ...])
+RETURNS type
+BEGIN
+	...
+END;
+```
+
+案例：
+
+定义一个存储过程，请求满足条件的总记录数；
+
+```mysql
+DELIMITER $
+
+CREATE function count_city(countryid int)
+RETURNS int
+BEGIN
+	DECLARE cnum int;
+	SELECT COUNT(*) INTO cnum FROM city WHERE country_id = countryId;
+	return cnum;
+END $
+
+DELIMITER ;
+```
+
+调用：
+
+```mysql
+SELECT count_city(1);
+SELECT count_city(2);
+```
 
